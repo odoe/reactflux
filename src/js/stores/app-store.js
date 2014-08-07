@@ -1,18 +1,18 @@
 var AppDispatcher = require('../dispatchers/app-dispatcher');
 var AppConstants = require('../constants/app-constants');
 var merge = require('react/lib/merge');
-var EventEmitter = require('events').EventEmitter;
 var Bacon = require('baconjs').Bacon;
 
-var CHANGE_EVENT = "change";
-
 var _catalog = [
-    {id:1, title: 'Widget #1', cost: 1},
-    {id:2, title: 'Widget #2', cost: 2},
-    {id:3, title: 'Widget #3', cost: 3}
-  ];
+  {id:1, title: 'Widget #1', cost: 1},
+  {id:2, title: 'Widget #2', cost: 2},
+  {id:3, title: 'Widget #3', cost: 3}
+];
 
 var _cartItems = [];
+
+var updateStream = new Bacon.Bus();
+var eventStreams = [];
 
 function _removeItem(index){
   _cartItems[index].inCart = false;
@@ -47,39 +47,37 @@ function _addItem(item){
   }
 }
 
-var AppStore = merge(EventEmitter.prototype, {
-  eventStreams: [],
-  emitChange:function(){
-    this.emit(CHANGE_EVENT);
-  },
+var _AppStore = function() {};
 
-  addChangeListener:function(callback){
-    this.eventStreams.push({
-      event: CHANGE_EVENT,
+var AppStore = merge(_AppStore.prototype, {
+  addChangeListener: function(callback){
+    eventStreams.push({
       callback: callback,
-      stream: Bacon.fromEventTarget(this, CHANGE_EVENT).onValue(callback)
+      dispose: updateStream.subscribe(callback)
     });
   },
 
-  removeChangeListener:function(callback){
-    this.eventStreams = this.eventStreams.filter(function(stream) {
-      if (stream.event === CHANGE_EVENT && stream.callback === callback) {
-        stream.stream();
+  removeChangeListener: function(callback){
+    eventStreams = eventStreams.filter(function(stream) {
+      if (stream.callback === callback) {
+        stream.dispose();
         return false;
       }
       return true;
     });
   },
 
-  getCart:function(){
+  getCart: function(){
     return _cartItems;
   },
 
-  getCatalog:function(){
+  getCatalog: function(){
     return _catalog;
   },
 
-  dispatcherIndex:AppDispatcher.register(function(next){
+  // I can't even figure out where this method is initalized
+  // but it works
+  dispatcherIndex: AppDispatcher.register(function(next){
     var value = next.value();
     var action = value.action; // this is our action from handleViewAction
     // since next event is emitted to all subscribers
@@ -103,7 +101,7 @@ var AppStore = merge(EventEmitter.prototype, {
           _decreaseItem(action.index);
         break;
       }
-      AppStore.emitChange();
+      updateStream.push(action);
     }
 
     return true;

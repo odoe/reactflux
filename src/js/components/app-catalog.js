@@ -15,7 +15,7 @@ var Catalog = React.createClass({
   render: function() {
     var items = this.state.items.map(function(item) {
       return (
-        <tr>
+        <tr key={item.title}>
           <td>{item.title}</td>
           <td>${item.cost}</td>
           <td><AddToCart item={item}/></td>

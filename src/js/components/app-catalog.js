@@ -8,20 +8,22 @@ function getCatalog() {
   return { items: AppStore.getCatalog() };
 }
 
+function itemRows(item) {
+  return (
+    <tr key={item.title}>
+      <td>{item.title}</td>
+      <td>${item.cost}</td>
+      <td><AddToCart item={item}/></td>
+    </tr>
+  );
+}
+
 var Catalog = React.createClass({
   getInitialState: function() {
     return getCatalog();
   },
   render: function() {
-    var items = this.state.items.map(function(item) {
-      return (
-        <tr key={item.title}>
-          <td>{item.title}</td>
-          <td>${item.cost}</td>
-          <td><AddToCart item={item}/></td>
-        </tr>
-      );
-    });
+    var items = this.state.items.map(itemRows);
     return (
       <table className='table table-hover'>
         {items}

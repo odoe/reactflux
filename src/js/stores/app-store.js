@@ -54,11 +54,11 @@ var AppStore = merge(EventEmitter.prototype, {
   },
 
   addChangeListener:function(callback){
-    this.eventStreams.concat([{
+    this.eventStreams.push({
       event: CHANGE_EVENT,
       callback: callback,
       stream: Bacon.fromEventTarget(this, CHANGE_EVENT).onValue(callback)
-    }]);
+    });
   },
 
   removeChangeListener:function(callback){
